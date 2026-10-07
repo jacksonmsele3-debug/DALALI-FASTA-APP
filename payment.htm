@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard ya Malipo - Vifurushi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="/manifest.json">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-6">
+        
+        <!-- Header ya Dashboard -->
+        <div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 p-6 md:p-8 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-indigo-500/20 text-indigo-400 text-xs px-3 py-1 rounded-full font-semibold border border-indigo-500/30">Sandbox Mode</span>
+                    <span class="text-emerald-400 text-xs flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Mfumo uko hewani</span>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight mt-2">Chagua Kifurushi Chako</h1>
+                <p class="text-slate-400 text-sm mt-1">Lipia kupitia Azampay kwa urahisi na usalama mkubwa.</p>
+            </div>
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3">
+                <div class="bg-indigo-600/30 p-2.5 rounded-lg text-indigo-400">
+                    <i class="fa-solid fa-lock text-lg"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">Hali ya Kufunga</div>
+                    <div class="text-sm font-bold text-slate-200">Inalindwa na Mfumo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sehemu Kuu (Inputs & Cards) -->
+        <div class="p-6 md:p-8 space-y-8">
+            
+            <!-- Grid ya Inputs (Namba na Mtandao) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-950/50 p-6 rounded-xl border border-slate-800">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Namba ya Simu (Mpesa, Tigo, Airtel)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-phone"></i></span>
+                        <input type="text" id="phoneNumber" placeholder="2557XXXXXXXX" 
+                               class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-100 placeholder-slate-600 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Mtandao wa Simu (Provider)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500"><i class="fa-solid fa-network-wired"></i></span>
+                        <select id="provider" class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-100 transition">
+                            <option value="Airtel">Airtel Money</option>
+                            <option value="Tigo">Tigo Pesa</option>
+                            <option value="Vodacom">M-Pesa (Vodacom)</option>
+                            <option value="AzamPesa">AzamPesa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Navigation Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800 scrollbar-none">
+                <button onclick="badiliTab('listings')" id="tab-listings" class="tab-btn active px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-indigo-600 text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Listings
+                </button>
+                <button onclick="badiliTab('boost')" id="tab-boost" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-rocket"></i> Boost
+                </button>
+                <button onclick="badiliTab('subscription')" id="tab-subscription" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-gem"></i> Subscription
+                </button>
+                <button onclick="badiliTab('verification')" id="tab-verification" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Verification
+                </button>
+                <button onclick="badiliTab('ads')" id="tab-ads" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-rectangle-ad"></i> Ads
+                </button>
+            </div>
+
+            <!-- Tab Content Sections -->
+            <div id="tab-content">
+                
+                <!-- 1. Listings Category -->
+                <div id="content-listings" class="category-content grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/20">SINGLE LISTING</span>
+                                <i class="fa-solid fa-house-circle-check text-slate-600 group-hover:text-blue-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Tangazo Moja</h3>
+                            <p class="text-xs text-slate-400 mt-1">Weka tangazo lako moja lionekane kwa wateja wote.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-slate-100">TZS 3,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ tangazo</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('single_listing', 3000)" 
+                                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer">
+                            <i class="fa-solid fa-bolt"></i> Lipia Tangazo
+                        </button>
+                    </div>
+
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-indigo-500/10 text-indigo-400 text-xs font-bold px-3 py-1 rounded-full border border-indigo-500/20">BULK LISTINGS</span>
+                                <i class="fa-solid fa-layer-group text-slate-600 group-hover:text-indigo-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Kifurushi cha Matangazo (5)</h3>
+                            <p class="text-xs text-slate-400 mt-1">Weka matangazo 5 kwa bei ya punguzo.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-slate-100">TZS 12,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ matangazo 5</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('bulk_listings', 12000)" 
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer">
+                            <i class="fa-solid fa-bolt"></i> Lipia Vifurushi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Boost Category -->
+                <div id="content-boost" class="category-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-amber-500/10 text-amber-400 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/20">BOOST SIKU 3</span>
+                                <i class="fa-solid fa-rocket text-slate-600 group-hover:text-amber-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Boost ya Haraka</h3>
+                            <p class="text-xs text-slate-400 mt-1">Lilete tangazo yako juu ya matokeo kwa siku 3.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-amber-400">TZS 5,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ siku 3</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('boost_3days', 5000)" 
+                                class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 cursor-pointer">
+                            <i class="fa-solid fa-rocket"></i> Boost Sasa
+                        </button>
+                    </div>
+
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-amber-500/10 text-amber-400 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/20">BOOST SIKU 7</span>
+                                <i class="fa-solid fa-fire text-slate-600 group-hover:text-amber-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Boost ya Wiki</h3>
+                            <p class="text-xs text-slate-400 mt-1">Uonekano wa juu zaidi kwa wiki nzima.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-amber-400">TZS 10,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ siku 7</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('boost_7days', 10000)" 
+                                class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 cursor-pointer">
+                            <i class="fa-solid fa-fire"></i> Boost Wiki
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Subscription Category -->
+                <div id="content-subscription" class="category-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Kifurushi cha Wiki -->
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/20">WIKI 1</span>
+                                <i class="fa-solid fa-shield-halved text-slate-600 group-hover:text-blue-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Kifurushi cha Wiki</h3>
+                            <p class="text-xs text-slate-400 mt-1">Faida zote za mfumo kwa siku 7 mfululizo.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-slate-100">TZS 10,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ wiki</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('weekly', 10000)" 
+                                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer">
+                            <i class="fa-solid fa-bolt"></i> Lipa Wiki Hii
+                        </button>
+                    </div>
+
+                    <!-- Kifurushi cha Mwezi -->
+                    <div class="group relative bg-gradient-to-b from-slate-900 to-indigo-950/30 border border-indigo-500/30 hover:border-indigo-500 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20 flex flex-col justify-between">
+                        <div class="absolute -top-3 right-6 bg-indigo-600 text-white text-[10px] uppercase font-extrabold px-3 py-1 rounded-full shadow">Maarufu Zaidi</div>
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-indigo-500/25 text-indigo-300 text-xs font-bold px-3 py-1 rounded-full border border-indigo-500/40">MWEZI 1</span>
+                                <i class="fa-solid fa-crown text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Kifurushi cha Mwezi</h3>
+                            <p class="text-xs text-slate-400 mt-1">Uhuru kamili wa huduma zote kwa siku 30.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-indigo-400">TZS 35,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ mwezi</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('monthly', 35000)" 
+                                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer">
+                            <i class="fa-solid fa-star"></i> Lipa Mwezi Huu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Verification Category -->
+                <div id="content-verification" class="category-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/20">VERIFIED BADGE</span>
+                                <i class="fa-solid fa-circle-check text-slate-600 group-hover:text-emerald-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Akaunti Iliyothibitishwa</h3>
+                            <p class="text-xs text-slate-400 mt-1">Pata muonekano wa kuaminika na badge ya kithibitisho.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-emerald-400">TZS 20,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ mara moja</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('verification_badge', 20000)" 
+                                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer">
+                            <i class="fa-solid fa-shield text-xs"></i> Pata Verification
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5. Ads Category -->
+                <div id="content-ads" class="category-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="group relative bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-purple-500/10 text-purple-400 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/20">BANNER ADS</span>
+                                <i class="fa-solid fa-rectangle-ad text-slate-600 group-hover:text-purple-400 transition"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-200">Tangazo la Banner</h3>
+                            <p class="text-xs text-slate-400 mt-1">Weka banner yako sehemu ya juu ya mfumo kwa siku 14.</p>
+                            <div class="my-6">
+                                <span class="text-3xl font-black text-purple-400">TZS 50,000</span>
+                                <span class="text-xs text-slate-500 ml-1">/ siku 14</span>
+                            </div>
+                        </div>
+                        <button onclick="fanyaMalipo('banner_ad', 50000)" 
+                                class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 cursor-pointer">
+                            <i class="fa-solid fa-bullhorn"></i> Weka Banner
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sehemu ya Ujumbe (Status Box) -->
+            <div id="statusMessage" class="hidden p-4 rounded-xl text-sm font-medium text-center border transition-all"></div>
+
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function badiliTab(tabName) {
+            // Ficha sehemu zote
+            document.querySelectorAll('.category-content').forEach(el => el.classList.add('hidden'));
+            
+            // Rejesha muonekano wa kawaida wa vitufe
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-slate-800 text-slate-400 hover:text-slate-200 flex items-center gap-2';
+            });
+
+            // Onyesha sehemu iliyochaguliwa
+            const activeContent = document.getElementById(`content-${tabName}`);
+            if(activeContent) activeContent.classList.remove('hidden');
+
+            // Weka kitufe kilichobonyezwa kuwa 'active'
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            if(activeTab) activeTab.className = 'tab-btn active px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-indigo-600 text-white flex items-center gap-2';
+        }
+
+        async function fanyaMalipo(plan, amount) {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const provider = document.getElementById('provider').value;
+            const statusDiv = document.getElementById('statusMessage');
+
+            if (!phoneNumber) {
+                statusDiv.className = "p-4 rounded-xl text-sm font-medium text-center border bg-red-500/10 border-red-500/20 text-red-400 block";
+                statusDiv.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-2'></i> Tafadhali ingiza namba sahihi ya simu!";
+                return;
+            }
+
+            statusDiv.className = "p-4 rounded-xl text-sm font-medium text-center border bg-amber-500/10 border-amber-500/20 text-amber-400 block";
+            statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i> Tunatuma ombi la malipo kwenda Azampay... Tafadhali thibitisha kwenye simu yako.";
+
+            try {
+                const response = `http://localhost:3000/api/pay`;
+                const res = await fetch(response, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber, plan, amount, provider })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    statusDiv.className = "p-4 rounded-xl text-sm font-medium text-center border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 block";
+                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-check mr-2'></i> Malipo yamefanikiwa! Tunasasisha akaunti yako...`;
+
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    let userId = user ? user.id : null;
+
+                    if (!userId) {
+                        const localUser = JSON.parse(localStorage.getItem('dalali_user'));
+                        if (localUser) userId = localUser.id;
+                    }
+
+                    if (userId) {
+                        const { error: updateError } = await supabaseClient
+                            .from('subscriptions')
+                            .update({ status: 'active', plan: plan })
+                            .eq('user_id', userId);
+
+                        if (updateError) {
+                            console.error("Hitilafu ya kusasisha database:", updateError.message);
+                        }
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = "Post.htm";
+                    }, 2000);
+
+                } else {
+                    statusDiv.className = "p-4 rounded-xl text-sm font-medium text-center border bg-red-500/10 border-red-500/20 text-red-400 block";
+                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark mr-2'></i> Imefeli: ${result.message}`;
+                }
+            } catch (error) {
+                statusDiv.className = "p-4 rounded-xl text-sm font-medium text-center border bg-red-500/10 border-red-500/20 text-red-400 block";
+                statusDiv.innerHTML = "<i class='fa-solid fa-triangle-exclamation mr-2'></i> Kosa la mtandao au seva haijawashwa.";
+            }
+        }
+    </script>
+</body>
+</html>

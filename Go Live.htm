@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Live - Dalali Fasta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: #0b0f19; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        .phone-container { width: 100%; max-width: 410px; height: 820px; background: #111827; border-radius: 35px; position: relative; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.7); border: 3px solid #1f2937; }
+        .video-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #030712; }
+        video.main-host-video { width: 100%; height: 100%; object-fit: cover; }
+        .guest-video-box { position: absolute; top: 75px; right: 15px; width: 110px; height: 160px; background: #1f2937; border-radius: 16px; overflow: hidden; border: 2px solid #8b5cf6; z-index: 5; display: none; box-shadow: 0 8px 16px rgba(139, 92, 246, 0.3); }
+        .guest-video-box video { width: 100%; height: 100%; object-fit: cover; }
+        .guest-label { position: absolute; bottom: 5px; left: 5px; background: rgba(139, 92, 246, 0.85); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: bold; }
+        .overlay-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 15px; background: linear-gradient(180deg, rgba(3,7,18,0.75) 0%, rgba(3,7,18,0) 30%, rgba(3,7,18,0.5) 70%, rgba(3,7,18,0.95) 100%); pointer-events: none; }
+        .clickable { pointer-events: auto; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .host-badge { display: flex; align-items: center; gap: 8px; background: rgba(31, 41, 55, 0.75); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); }
+        .host-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; color: white; }
+        .live-tag { background: #ef4444; color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 8px; letter-spacing: 1px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .center-start-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; z-index: 20; }
+        .btn-go-live-main { width: 105px; height: 105px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #8b5cf6); border: 4px solid rgba(255,255,255,0.25); color: white; font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 35px rgba(236, 72, 153, 0.6); transition: transform 0.2s; }
+        .btn-go-live-main:active { transform: scale(0.95); }
+        .chat-container { height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; width: 100%; scroll-behavior: smooth; }
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        .chat-bubble { background: rgba(31, 41, 55, 0.8); backdrop-filter: blur(6px); padding: 8px 12px; border-radius: 14px; font-size: 12px; width: fit-content; max-width: 90%; border-left: 3px solid #8b5cf6; }
+        .chat-user { color: #f472b6; font-weight: bold; margin-right: 5px; }
+        .bottom-bar { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .chat-input { flex: 1; background: rgba(31, 41, 55, 0.85); border: 1px solid rgba(255,255,255,0.15); padding: 11px 16px; border-radius: 25px; color: white; font-size: 12px; outline: none; transition: border-color 0.2s; }
+        .chat-input:focus { border-color: #8b5cf6; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(31, 41, 55, 0.85); border: 1px solid rgba(255,255,255,0.15); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+        .icon-btn:hover { background: rgba(55, 65, 81, 1); }
+        .btn-send { background: linear-gradient(135deg, #ec4899, #8b5cf6) !important; border: none !important; }
+        .btn-join { background: #3b82f6 !important; border: none !important; }
+        .nav-links { display: flex; justify-content: space-around; margin-top: 8px; background: rgba(31,41,55,0.6); padding: 8px; border-radius: 12px; font-size: 11px; }
+        .nav-links a { color: #d1d5db; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+        .nav-links a:hover { color: #f472b6; }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="video-background"><video id="hostVideo" class="main-host-video" autoplay playsinline muted></video></div>
+        <div class="guest-video-box" id="guestBox"><video id="guestVideo" autoplay playsinline muted></video><span class="guest-label"><i class="fa-solid fa-user-shield"></i> Guest</span></div>
+        <div class="center-start-box clickable" id="startCenterBox"><button class="btn-go-live-main" id="goLiveBtn"><i class="fa-solid fa-tower-broadcast" style="font-size: 22px; margin-bottom: 4px;"></i>GO LIVE</button></div>
+        <div class="overlay-ui">
+            <div class="top-header clickable">
+                <div class="host-badge">
+                    <div class="host-avatar" id="hostAvatarLetter">D</div>
+                    <span style="font-size: 12px; font-weight: 600;" id="hostNameDisplay">Dalali Live</span>
+                    <span class="live-tag" id="liveBadge" style="display: none;">LIVE</span>
+                </div>
+                <button class="icon-btn" id="endLiveBtn" style="display:none; background:#ef4444; border:none;" title="Zima Live"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <div class="chat-container clickable" id="chatBox"></div>
+                <form class="bottom-bar clickable" id="chatForm">
+                    <input type="text" id="userInput" class="chat-input" placeholder="Andika ujumbe wako hapa..." autocomplete="off">
+                    <button type="submit" class="icon-btn btn-send"><i class="fa-solid fa-paper-plane"></i></button>
+                    <button type="button" class="icon-btn btn-join" id="joinLiveBtn" title="Jiunge na Live"><i class="fa-solid fa-user-plus"></i></button>
+                </form>
+                <div class="nav-links clickable">
+                    <a href="igia.html"><i class="fa-solid fa-right-to-bracket"></i> Toka / Badili Akaunti</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e";
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let hostStream = null;
+        let guestStream = null;
+        let currentStreamId = null;
+
+        function checkSession() {
+            const userStr = localStorage.getItem('dalali_user');
+            if (!userStr) {
+                alert("Tafadhali ingia kwenye akaunti yako kwanza!");
+                window.location.href = "igia.html";
+                return;
+            }
+            currentUser = JSON.parse(userStr);
+            const name = currentUser.full_name || currentUser.username || 'Dalali';
+            document.getElementById('hostNameDisplay').innerText = name;
+            document.getElementById('hostAvatarLetter').innerText = name.charAt(0).toUpperCase();
+        }
+        checkSession();
+
+        const goLiveBtn = document.getElementById('goLiveBtn');
+        const startCenterBox = document.getElementById('startCenterBox');
+        const endLiveBtn = document.getElementById('endLiveBtn');
+        const hostVideo = document.getElementById('hostVideo');
+        const liveBadge = document.getElementById('liveBadge');
+        const joinLiveBtn = document.getElementById('joinLiveBtn');
+        const guestBox = document.getElementById('guestBox');
+        const guestVideo = document.getElementById('guestVideo');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const chatBox = document.getElementById('chatBox');
+
+        goLiveBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
+            try {
+                hostStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                hostVideo.srcObject = hostStream;
+
+                const { data, error } = await _supabase.from('live_streams').insert([{ 
+                    host_id: currentUser.id, 
+                    stream_key: 'stream_' + Date.now(), 
+                    status: 'live',
+                    title: 'Live ya ' + (currentUser.full_name || currentUser.username)
+                }]).select();
+
+                if (error) { alert("Kosa la Supabase: " + error.message); return; }
+
+                currentStreamId = data[0].id;
+                startCenterBox.style.display = 'none';
+                liveBadge.style.display = 'inline-block';
+                endLiveBtn.style.display = 'flex';
+
+                await _supabase.from('live_messages').insert([{ stream_id: currentStreamId, user_id: currentUser.id, message: "Upo HEWANI rasmi! 🔴" }]);
+                subscribeToChats();
+            } catch (err) {
+                alert("Tafadhali ruhusu Kamera na Microphone kwenye kivinjari chako!");
+            }
+        });
+
+        endLiveBtn.addEventListener('click', async () => {
+            if (hostStream) hostStream.getTracks().forEach(track => track.stop());
+            if (guestStream) guestStream.getTracks().forEach(track => track.stop());
+            if (currentStreamId) {
+                await _supabase.from('live_streams').update({ status: 'ended' }).eq('id', currentStreamId);
+            }
+            guestBox.style.display = 'none';
+            startCenterBox.style.display = 'flex';
+            liveBadge.style.display = 'none';
+            endLiveBtn.style.display = 'none';
+            chatBox.innerHTML = '';
+            currentStreamId = null;
+        });
+
+        joinLiveBtn.addEventListener('click', async () => {
+            if (!currentStreamId) { alert("Anza Live kwanza ndipo ukaribishe mgeni!"); return; }
+            try {
+                if (guestBox.style.display === 'block') {
+                    if (guestStream) guestStream.getTracks().forEach(track => track.stop());
+                    guestBox.style.display = 'none';
+                } else {
+                    guestStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    guestVideo.srcObject = guestStream;
+                    guestBox.style.display = 'block';
+                }
+            } catch (err) { alert("Imeshindwa kufungua kamera ya Mgeni!"); }
+        });
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text || !currentStreamId || !currentUser) return;
+            userInput.value = '';
+            await _supabase.from('live_messages').insert([{ stream_id: currentStreamId, user_id: currentUser.id, message: text }]);
+        });
+
+        function subscribeToChats() {
+            _supabase.from('live_messages').select('message, users(username, full_name)').eq('stream_id', currentStreamId).order('id', { ascending: true }).then(({ data }) => {
+                chatBox.innerHTML = '';
+                if (data) {
+                    data.forEach(item => {
+                        const name = item.users?.full_name || item.users?.username || 'Mtumiaji';
+                        addChatBubble(name, item.message);
+                    });
+                }
+            });
+
+            _supabase.channel('realtime_chats')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_messages', filter: `stream_id=eq.${currentStreamId}` }, async payload => {
+                    const { data: uData } = await _supabase.from('users').select('full_name, username').eq('id', payload.new.user_id).single();
+                    const name = uData?.full_name || uData?.username || 'Mtumiaji';
+                    addChatBubble(name, payload.new.message);
+                })
+                .subscribe();
+        }
+
+        function addChatBubble(user, message) {
+            let bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.innerHTML = `<span class="chat-user">${escapeHTML(user)}:</span> ${escapeHTML(message)}`;
+            chatBox.appendChild(bubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Fasta | Admin Panel (Upload kutoka Kifaa)</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-hover: #059669;
+            --dark-bg: #090D16;
+            --panel-bg: #0f172a;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: #030508;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .admin-web-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            padding: 30px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .back-home {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.78rem;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .form-group input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        @media (max-width: 768px) {
+            body { padding: 0; background: var(--dark-bg); }
+            .admin-web-container { border: none; border-radius: 0; min-height: 100vh; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-web-container">
+        <header>
+            <a href="index.htm" class="logo">
+                <i class="fa-solid fa-shield-halved" style="color: #10B981;"></i> ADMIN<span>PANEL</span>
+            </a>
+            <a href="index.htm" class="back-home"><i class="fa-solid fa-arrow-left"></i> Rudi Tovuti</a>
+        </header>
+
+        <form onsubmit="chapishaData(event)">
+            <div class="form-group">
+                <label>Unataka Kutuma Nini?</label>
+                <select id="post-type" onchange="badiliAinaFormi()">
+                    <option value="property">Mali (Nyumba/Kiwanja yenye Picha na Video kutoka kwenye Kifaa)</option>
+                    <option value="banner">Tangazo Kuu la Juu (Admin Promo Banner)</option>
+                </select>
+            </div>
+
+            <!-- SEHEMU YA MALI (NYUMBA / VIWANJA) -->
+            <div id="section-property">
+                <div class="form-group">
+                    <label>Kichwa cha Habari (Title)</label>
+                    <input type="text" id="p-title" placeholder="Mf. Nyumba ya Kisasa au Viwanja" required>
+                </div>
+                <div class="form-group">
+                    <label>Kundi (Category)</label>
+                    <select id="p-category">
+                        <option value="Inapangishwa">Inapangishwa (Nyumba)</option>
+                        <option value="Inauzwa">Inauzwa (Nyumba)</option>
+                        <option value="Kiwanja">Kiwanja Kinauzwa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Bei (Tsh)</label>
+                    <input type="number" id="p-price" placeholder="Mf. 40000000" required>
+                </div>
+                <div class="form-group">
+                    <label>Eneo (Location)</label>
+                    <input type="text" id="p-location" placeholder="Mf. Kigamboni, Dar es Salaam" required>
+                </div>
+                <div class="form-group">
+                    <label>Namba ya WhatsApp ya Dalali</label>
+                    <input type="text" id="p-phone" placeholder="Mf. 255712345678" required>
+                </div>
+                
+                <!-- SEHEMU YA KUCHUKUA PICHA KWENYE KIFAA -->
+                <div class="form-group">
+                    <label>Chagua Picha ya Mali kutoka Kifaa chako</label>
+                    <input type="file" id="p-img-file" accept="image/*" required>
+                </div>
+
+                <!-- SEHEMU YA KUCHUKUA VIDEO KWENYE KIFAA -->
+                <div class="form-group">
+                    <label>Chagua Video ya Mali kutoka Kifaa chako (Hiari)</label>
+                    <input type="file" id="p-video-file" accept="video/*">
+                </div>
+            </div>
+
+            <!-- SEHEMU YA BANNER YA JUU -->
+            <div id="section-banner" style="display: none;">
+                <div class="form-group">
+                    <label>Ujumbe Mkubwa wa Tangazo</label>
+                    <input type="text" id="b-title" placeholder="Mf. PUNGUZO LA MWAKA">
+                </div>
+                <div class="form-group">
+                    <label>Maelezo Madogo</label>
+                    <input type="text" id="b-desc" placeholder="Mf. Pata punguzo kubwa leo.">
+                </div>
+                <div class="form-group">
+                    <label>Maandishi ya Kitufe</label>
+                    <input type="text" id="b-btn-text" placeholder="Mf. GUNDUA SASA">
+                </div>
+                <div class="form-group">
+                    <label>Chagua Picha ya Tangazo kutoka Kifaa</label>
+                    <input type="file" id="b-img-file" accept="image/*" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submit-btn">Chapisha Kwenye Tovuti</button>
+        </form>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function badiliAinaFormi() {
+            const aina = document.getElementById('post-type').value;
+            document.getElementById('section-property').style.display = aina === 'property' ? 'block' : 'none';
+            document.getElementById('section-banner').style.display = aina === 'banner' ? 'block' : 'none';
+        }
+
+        async function uploadFileToSupabase(file, folderName) {
+            if (!file) return null;
+            const fileName = `${folderName}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+            const { data, error } = await supabaseClient.storage
+                .from('dalali-files')
+                .upload(fileName, file);
+
+            if (error) throw error;
+
+            // Pata Public URL ya faili iliyopakiwa
+            const { data: publicURLData } = supabaseClient.storage
+                .from('dalali-files')
+                .getPublicUrl(fileName);
+
+            return publicURLData.publicUrl;
+        }
+
+        async function chapishaData(event) {
+            event.preventDefault();
+            const aina = document.getElementById('post-type').value;
+            const btn = document.getElementById('submit-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = "Inapakia faili na kuchapisha...";
+
+            try {
+                if (aina === 'property') {
+                    const title = document.getElementById('p-title').value.trim();
+                    const category = document.getElementById('p-category').value;
+                    const price = document.getElementById('p-price').value.trim();
+                    const location = document.getElementById('p-location').value.trim();
+                    const phone = document.getElementById('p-phone').value.trim();
+                    
+                    const imgFile = document.getElementById('p-img-file').files[0];
+                    const videoFile = document.getElementById('p-video-file').files[0];
+
+                    // Pakia picha na video kutoka kwenye kifaa kwenda Supabase Storage
+                    const imageUrl = await uploadFileToSupabase(imgFile, 'images');
+                    const videoUrl = await uploadFileToSupabase(videoFile, 'videos');
+
+                    const { error } = await supabaseClient.from('properties').insert([{
+                        title, category, price, location, phone, 
+                        image_url: imageUrl, 
+                        video_url: videoUrl
+                    }]);
+
+                    if (error) throw error;
+                    alert("Mali yenye Picha na Video kutoka kifaa chako imewekwa kikamilifu!");
+                } else {
+                    const title = document.getElementById('b-title').value.trim();
+                    const description = document.getElementById('b-desc').value.trim();
+                    const button_text = document.getElementById('b-btn-text').value.trim();
+                    const imgFile = document.getElementById('b-img-file').files[0];
+
+                    const imageUrl = await uploadFileToSupabase(imgFile, 'banners');
+
+                    const { error } = await supabaseClient.from('admin_banners').insert([{
+                        title, description, button_text, 
+                        image_url: imageUrl
+                    }]);
+
+                    if (error) throw error;
+                    alert("Tangazo la Admin Banner limesasishwa kikamilifu!");
+                }
+                location.reload();
+            } catch (err) {
+                alert("Imeshindwa kutuma: " + err.message);
+                btn.disabled = false;
+                btn.innerHTML = "Chapisha Kwenye Tovuti";
+            }
+        }
+    </script>
+</body>
+</html>

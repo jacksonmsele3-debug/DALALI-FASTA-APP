@@ -1,0 +1,18 @@
+{
+    "short_name": "DalaliFasta",
+    "name": "Dalali Fasta - Soko Kuu la Nyumba",
+    "description": "Tafuta na upange nyumba au viwanja Tanzania nzima kupitia Dalali Fasta.",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#090D16",
+    "theme_color": "#10B981",
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "48x48 72x72 96x96 128x128 256x256 512x512",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+      }
+    ]
+  }

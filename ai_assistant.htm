@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Fasta | Smart AI Assistant</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-hover: #059669;
+            --dark-bg: #090D16;
+            --panel-bg: #0f172a;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .chat-card {
+            width: 100%;
+            max-width: 450px;
+            height: 600px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bot-avatar {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .bot-info h3 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .bot-info p {
+            font-size: 0.75rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .bot-info p::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.bot {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message.user {
+            background: var(--primary);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .chat-footer {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-box input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .input-box input:focus {
+            border-color: var(--primary);
+        }
+
+        .input-box button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .input-box button:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-card">
+        <div class="chat-header">
+            <div class="bot-avatar">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="bot-info">
+                <h3>Smart AI | Dalali Fasta</h3>
+                <p>Mubashara (Online)</p>
+            </div>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+            <div class="message bot">
+                Habari! Mimi ni AI Assistant wa Dalali Fasta. Huduma hii ni BURE kabisa kwa wiki yako ya kwanza (siku 7 za mwanzo)! Ninawezaje kukusaidia kuhusu nyumba, viwanja, au huduma zetu leo?
+            </div>
+        </div>
+
+        <div class="chat-footer">
+            <form class="input-box" onsubmit="tumaUjumbe(event)">
+                <input type="text" id="userInput" placeholder="Uliza kitu chochote..." required autocomplete="off">
+                <button type="submit" id="sendBtn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. SUPABASE CONFIGURATION
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. GEMINI API CONFIGURATION
+        const GEMINI_API_KEY = "AQ.Ab8RN6ItvwaqNS1LLB-FlyZDjPboA9JkCf6BqrLU8wX_I__h4Q"; 
+        const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+
+        // MAELEKEZO YA AI YALIYOBADILISHWA KUHUSU WIKI 1 YA BURE
+        const SYSTEM_INSTRUCTION = "Wewe ni Msaidizi wa AI wa mfumo wa 'Dalali Fasta'. Waambie wateja kwa ukarimu kuwa huduma hii ni BURE KABISA kwa wiki ya kwanza (siku 7 za mwanzo), na baada ya hapo watahitaji kulipia kifurushi ili kuendelea kutumia. Saidia wateja kupata nyumba za kupanga, viwanja vya kununua, na kuelekeza jinsi ya kulipia vifurushi au kuweka matangazo. Jibu kwa lugha ya Kiswahili fasaha, kwa ukarimu, na kwa ufupi.";
+
+        // FUNCTION YA KUULIZA GEMINI AI
+        async function ulizaGeminiAI(swali) {
+            try {
+                const response = await fetch(GEMINI_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-goog-api-key": GEMINI_API_KEY
+                    },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                parts: [
+                                    { text: `${SYSTEM_INSTRUCTION}\n\nSwali la mteja: ${swali}` }
+                                ]
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error("Gemini Error:", data.error);
+                    return `Kosa: ${data.error.message}`;
+                }
+
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    return "Samahani, sikuweza kupata jibu kwa sasa.";
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                return "Samahani, kuna tatizo la mtandao wakati wa kuunganishwa na AI.";
+            }
+        }
+
+        // FUNCTION YA KUTUMA UJUMBE NA KUHIFADHI SUPABASE
+        async function tumaUjumbe(event) {
+            event.preventDefault();
+            const inputField = document.getElementById("userInput");
+            const userMsg = inputField.value.trim();
+
+            if (!userMsg) return;
+
+            const chatBody = document.getElementById("chatBody");
+
+            // Ongeza Ujumbe wa Mtumiaji
+            const userDiv = document.createElement("div");
+            userDiv.className = "message user";
+            userDiv.innerText = userMsg;
+            chatBody.appendChild(userDiv);
+
+            inputField.value = "";
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Onyesha Indicator ya "Inaandika..."
+            const loadingDiv = document.createElement("div");
+            loadingDiv.className = "message bot typing-indicator";
+            loadingDiv.id = "loadingIndicator";
+            loadingDiv.innerText = "AI inaandika jibu...";
+            chatBody.appendChild(loadingDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Omba jibu kutoka Gemini AI
+            const aiResponse = await ulizaGeminiAI(userMsg);
+
+            // Ondoa Indicator ya Loading
+            const indicator = document.getElementById("loadingIndicator");
+            if (indicator) indicator.remove();
+
+            // Onyesha Jibu la AI
+            const botDiv = document.createElement("div");
+            botDiv.className = "message bot";
+            botDiv.innerText = aiResponse;
+            chatBody.appendChild(botDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Hifadhi kwenye Supabase
+            try {
+                await supabaseClient
+                    .from('ai_chats')
+                    .insert([
+                        { 
+                            user_message: userMsg, 
+                            bot_response: aiResponse 
+                        }
+                    ]);
+            } catch (err) {
+                console.error("Supabase Save Error:", err);
+            }
+        }
+    </script>
+</body>
+</html>

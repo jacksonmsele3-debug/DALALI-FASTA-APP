@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jisajili au Ingia | Dalali Fasta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-hover: #059669;
+            --dark-bg: #090D16;
+            --panel-bg: #0f172a;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .auth-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .brand span { color: var(--primary); }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .form-group input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .toggle-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="brand">
+            <i class="fa-solid fa-house-circle-check"></i> Dalali<span>Fasta</span>
+        </div>
+
+        <!-- FORM YA KUJISAJILI -->
+        <div id="register-section">
+            <h3 style="margin-bottom: 15px; text-align: center;">Fungua Akaunti ya Dalali</h3>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Jina Kamili la Dalali</label>
+                    <input type="text" id="reg-jina" placeholder="Mf. Juma Mohamed" required>
+                </div>
+                <div class="form-group">
+                    <label>Barua Pepe (Email)</label>
+                    <input type="email" id="reg-email" placeholder="dalali@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Neno la Siri (Password)</label>
+                    <input type="password" id="reg-password" placeholder="******" required>
+                </div>
+                <button type="submit" class="btn-submit" id="reg-btn">Jisajili Sasa</button>
+            </form>
+            <p class="toggle-text">Una akaunti tayari? <a onclick="badiliFomu('login')">Ingia hapa</a></p>
+        </div>
+
+        <!-- FORM YA KUINGIA -->
+        <div id="login-section" style="display: none;">
+            <h3 style="margin-bottom: 15px; text-align: center;">Ingia kwenye Akaunti Yako</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Barua Pepe (Email)</label>
+                    <input type="email" id="login-email" placeholder="dalali@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Neno la Siri (Password)</label>
+                    <input type="password" id="login-password" placeholder="******" required>
+                </div>
+                <button type="submit" class="btn-submit" id="login-btn">Ingia Kwenye Dashboard</button>
+            </form>
+            <p class="toggle-text">Huna akaunti? <a onclick="badiliFomu('register')">Jisajili hapa</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyAgeqoCTtJCb2iGMqZuHomTEQ0Gz7QvPro",
+          authDomain: "dalali-fast.firebaseapp.com",
+          projectId: "dalali-fast",
+          storageBucket: "dalali-fast.firebasestorage.app",
+          messagingSenderId: "43277398471",
+          appId: "1:43277398471:web:9ffa15a498b2c3c70ae9e2",
+          measurementId: "G-KETQHWYENB"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+      </script>
+
+        // KUJISAJILI
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('reg-btn');
+            const jina = document.getElementById('reg-jina').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            btn.disabled = true;
+            btn.innerText = "Inasajili...";
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                await updateProfile(user, { displayName: jina });
+
+                localStorage.setItem("dalali_mwenyeji", JSON.stringify({
+                    id: user.uid,
+                    jina: jina,
+                    email: email
+                }));
+
+                alert("Umejisajili kwa mafanikio!");
+                window.location.href = "dashboard.html";
+            } catch (err) {
+                alert("Hitilafu: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "Jisajili Sasa";
+            }
+        });
+
+        // KUINGIA
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            btn.disabled = true;
+            btn.innerText = "Inaingia...";
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                localStorage.setItem("dalali_mwenyeji", JSON.stringify({
+                    id: user.uid,
+                    jina: user.displayName || "Dalali",
+                    email: user.email
+                }));
+
+                window.location.href = "dashboard.html";
+            } catch (err) {
+                alert("Imeshindwa kuingia: Hakiki email na neno lako la siri.");
+                btn.disabled = false;
+                btn.innerText = "Ingia Kwenye Dashboard";
+            }
+        });
+    </script>
+</body>
+</html>

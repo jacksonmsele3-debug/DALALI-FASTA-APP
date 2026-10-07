@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin System Control | Dalali Fasta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #EEF2FF;
+            --primary-dark: #3730A3;
+            --bg-body: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --dark-card: #1E1B4B;
+            --border: #E5E7EB;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); padding: 24px; }
+
+        /* HEADER SECTION */
+        .header-admin {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 16px 24px; border-radius: var(--radius-lg);
+            border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-admin h1 { font-size: 1.4rem; font-weight: 800; color: #111827; }
+        .header-admin h1 span { color: var(--primary); }
+
+        .btn-header {
+            background: var(--primary-light); color: var(--primary); font-weight: 700;
+            padding: 10px 18px; border-radius: var(--radius-md); border: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-header:hover { background: var(--primary); color: #FFF; }
+
+        /* STATS CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            padding: 20px; border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .stat-card span { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        .stat-card h2 { font-size: 1.8rem; font-weight: 800; color: #111827; margin-top: 8px; }
+
+        /* SECTIONS & TABLES */
+        .section-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #111827; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; margin-top: 10px; }
+        th { color: var(--text-muted); font-weight: 600; padding: 12px 10px; border-bottom: 2px solid var(--border); }
+        td { padding: 14px 10px; border-bottom: 1px solid var(--border); color: var(--text-main); font-weight: 500; }
+        tr:last-child td { border-bottom: none; }
+
+        /* FORM STYLING */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        .form-group input, .form-group select {
+            background: #F9FAFB; border: 1px solid var(--border);
+            color: var(--text-main); padding: 12px 14px; border-radius: var(--radius-md);
+            outline: none; font-size: 0.9rem; transition: 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary); background: #FFF; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* BUTTONS */
+        .btn-action { padding: 8px 14px; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .btn-delete { background: #FEE2E2; color: var(--danger); }
+        .btn-delete:hover { background: var(--danger); color: white; }
+        .btn-submit {
+            background: var(--primary); color: white; border-radius: var(--radius-md);
+            padding: 12px 20px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s;
+        }
+        .btn-submit:hover { background: var(--primary-dark); }
+
+        /* PREVIEW BOX */
+        .preview-box { margin-top: 15px; max-width: 250px; display: none; }
+        .preview-box video { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border); }
+
+        /* CHAT CONTAINER (DARK DASHBOARD PANEL LIKE REF IMAGE) */
+        .chat-admin-container {
+            display: grid; grid-template-columns: 280px 1fr; gap: 16px;
+            background: var(--dark-card); border-radius: var(--radius-lg); padding: 16px;
+            height: 480px; color: white;
+        }
+        .chat-inbox-list { border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto; padding-right: 10px; }
+        .chat-inbox-item {
+            padding: 12px; border-radius: var(--radius-md); cursor: pointer;
+            margin-bottom: 8px; background: rgba(255,255,255,0.05); transition: 0.2s;
+        }
+        .chat-inbox-item:hover, .chat-inbox-item.active {
+            background: var(--primary); color: white;
+        }
+        .chat-box-area { display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .messages-display {
+            flex-grow: 1; overflow-y: auto; padding: 12px; display: flex;
+            flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2);
+            border-radius: var(--radius-md); margin-bottom: 12px;
+        }
+        .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; line-height: 1.4; }
+        .msg-bubble.client { background: rgba(255,255,255,0.1); color: #FFF; align-self: flex-start; }
+        .msg-bubble.admin { background: var(--primary); color: #FFF; align-self: flex-end; }
+        .chat-reply-box { display: flex; gap: 10px; }
+        .chat-reply-box input {
+            flex-grow: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            padding: 12px; color: white; border-radius: var(--radius-md); outline: none;
+        }
+        .chat-reply-box input::placeholder { color: #9CA3AF; }
+
+        /* BADGES */
+        .badge-service { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+        .badge-boost { background: #FEF3C7; color: #D97706; }
+        .badge-premium { background: #D1FAE5; color: #059669; }
+        .badge-verify { background: #DBEAFE; color: #2563EB; }
+        .badge-ads { background: #FEE2E2; color: #DC2626; }
+
+        @media(max-width: 768px) {
+            .chat-admin-container { grid-template-columns: 1fr; height: auto; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-admin">
+        <h1>Admin <span>Control Panel</span></h1>
+        <button class="btn-header" onclick="window.location.href='index.html'">
+            <i class="fa-solid fa-arrow-left"></i> Rudi Sokoni
+        </button>
+    </div>
+
+    <!-- TAKWIMU KUU ZA MFUMO -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Video Zilizopo</span>
+            <h2 id="total-videos">0</h2>
+        </div>
+        <div class="stat-card">
+            <span>Ujumbe wa Wateja</span>
+            <h2 id="total-messages">0</h2>
+        </div>
+        <div class="stat-card">
+            <span>Jumla ya Malipo</span>
+            <h2 id="total-payments" style="color: var(--primary);">Tsh 0</h2>
+        </div>
+        <div class="stat-card">
+            <span>Madalali Waliosajiliwa</span>
+            <h2 id="total-users">0</h2>
+        </div>
+    </div>
+
+    <!-- SEHEMU YA MIALAMATIO / TAARIFA ZA MALIPO -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="fa-solid fa-wallet"></i> Taarifa za Malipo ya Huduma (Payments Control)
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Simu / User ID</th>
+                    <th>Aina ya Huduma</th>
+                    <th>Kiasi</th>
+                    <th>Hali (Status)</th>
+                    <th>Tarehe</th>
+                </tr>
+            </thead>
+            <tbody id="admin-payments-list">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Inapakia taarifa za malipo...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SEHEMU YA CHAT / UJUMBE WA WATEJA -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="fa-solid fa-comments"></i> Ujumbe Kutoka kwa Wateja (Live Messages)
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Chagua mteja ili kusoma ujumbe aliyeacha na umjibu moja kwa moja.</p>
+        
+        <div class="chat-admin-container">
+            <div class="chat-inbox-list" id="client-chats-list">
+                <p style="font-size: 0.8rem; color: #9CA3AF; text-align: center;">Inatafuta wateja...</p>
+            </div>
+            
+            <div class="chat-box-area">
+                <div class="messages-display" id="admin-messages-box">
+                    <p style="font-size: 0.85rem; color: #9CA3AF; text-align: center; margin: auto;">Bonyeza mazungumzo upande wa kushoto kuona ujumbe.</p>
+                </div>
+                <div class="chat-reply-box" id="reply-box-container" style="display: none;">
+                    <input type="text" id="admin-reply-input" placeholder="Andika jibu hapa...">
+                    <button class="btn-submit" onclick="tumaJibuAdmin()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORM YA KUPAKIA VIDEO AU MATANGAZO -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="fa-solid fa-video"></i> Weka Video Mpya au Tangazo la Video (video.htm)
+        </div>
+        <form onsubmit="hifadhiVideoDB(event)">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>Kichwa cha Tangazo / Video</label>
+                    <input type="text" id="admin-kichwa" placeholder="Mf. 🔥 Nyumba Nzuri Inauzwa Kinondoni" required>
+                </div>
+                <div class="form-group">
+                    <label>Aina ya Post</label>
+                    <select id="admin-ad-type">
+                        <option value="video">Nyumba / Video ya Kawaida</option>
+                        <option value="ads">📢 Tangazo la Biashara (Paid Ad)</option>
+                        <option value="boost">🔥 Boosted Listing</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Eneo (Location)</label>
+                    <input type="text" id="admin-eneo" placeholder="Mf. Kinondoni, Dar es Salaam" required>
+                </div>
+                <div class="form-group">
+                    <label>Bei (Tsh)</label>
+                    <input type="number" id="admin-bei" placeholder="Mf. 80000000" required>
+                </div>
+                <div class="form-group full">
+                    <label><i class="fa-solid fa-file-video"></i> Chagua Video Kutoka Kwenye Simu/PC</label>
+                    <input type="file" id="admin-video-file" accept="video/*" onchange="OnyeshaHakikiVideo(event)" required>
+                </div>
+            </div>
+
+            <div class="preview-box" id="preview-container">
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Hakiki ya Video:</label>
+                <video id="video-preview" controls></video>
+            </div>
+
+            <button type="submit" id="btn-upload" class="btn-submit" style="margin-top: 20px; width: 100%;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Pakia na Hifadhi Supabase & Cloudinary
+            </button>
+        </form>
+    </div>
+
+    <!-- ORODHA YA VIDEO NA MATANGAZO -->
+    <div class="section-card">
+        <div class="section-title">
+            <i class="fa-solid fa-building"></i> Dhibiti Video na Matangazo Yote (video.htm)
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kichwa</th>
+                    <th>Eneo</th>
+                    <th>Bei</th>
+                    <th>Aina</th>
+                    <th>Kitendo</th>
+                </tr>
+            </thead>
+            <tbody id="admin-house-list"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // TAARIFA RASMI ZA CLOUDINARY
+        const CLOUD_NAME = "ngjnergp"; 
+        const UPLOAD_PRESET = "dalali_preset"; 
+
+        // TAARIFA ZA SUPABASE
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let selectedClientPhone = null;
+        let selectedPropertyId = null;
+        let adminPhone = "0700000000";
+
+        window.addEventListener('DOMContentLoaded', () => {
+            pakiaDataAdmin();
+            pakiaMalipoAdmin();
+            pakiaUjumbeWaWateja();
+            sikilizaMesejiMpyaRealtime();
+        });
+
+        function OnyeshaHakikiVideo(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById("preview-container");
+            const videoPreview = document.getElementById("video-preview");
+
+            if (file) {
+                videoPreview.src = URL.createObjectURL(file);
+                previewContainer.style.display = "block";
+            } else {
+                previewContainer.style.display = "none";
+            }
+        }
+
+        // 1. PAKIA DATA ZA VIDEO NA MATANGAZO YA VIDEO.HTM
+        async function pakiaDataAdmin() {
+            const tbody = document.getElementById("admin-house-list");
+            const totalVidEl = document.getElementById("total-videos");
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Inapakia video...</td></tr>";
+
+            const { data, error } = await supabaseClient
+                .from('video_ads')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--danger);">Hitilafu: ${error.message}</td></tr>`;
+                return;
+            }
+
+            totalVidEl.innerText = data ? data.length : 0;
+            tbody.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Hakuna video au matangazo yaliyohifadhiwa.</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                let badgeClass = item.ad_type === 'boost' ? 'badge-boost' : (item.ad_type === 'ads' ? 'badge-ads' : 'badge-premium');
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.location || 'N/A'}</td>
+                        <td>Tsh ${parseFloat(item.price || 0).toLocaleString()}</td>
+                        <td><span class="badge-service ${badgeClass}">${(item.ad_type || 'Video').toUpperCase()}</span></td>
+                        <td>
+                            <button class="btn-action btn-delete" onclick="futaVideo('${item.id}')">Futa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 2. PAKIA MALIPO YOTE NA USAJILI (BOOST, PREMIUM, VERIFY, ADS)
+        async function pakiaMalipoAdmin() {
+            const tbody = document.getElementById("admin-payments-list");
+            const totalPayEl = document.getElementById("total-payments");
+
+            const { data, error } = await supabaseClient
+                .from('payments')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--danger);">Imeshindwa kusoma malipo: ${error.message}</td></tr>`;
+                return;
+            }
+
+            let grandTotal = 0;
+            tbody.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Hakuna rekodi za malipo bado.</td></tr>`;
+                totalPayEl.innerText = "Tsh 0";
+                return;
+            }
+
+            data.forEach(pay => {
+                grandTotal += parseFloat(pay.amount || 0);
+                let badgeClass = "badge-premium";
+                if(pay.service_type === 'boost') badgeClass = "badge-boost";
+                if(pay.service_type === 'verify') badgeClass = "badge-verify";
+                if(pay.service_type === 'ads') badgeClass = "badge-ads";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${pay.user_phone || pay.user_id || 'Mtumiaji'}</b></td>
+                        <td><span class="badge-service ${badgeClass}">${(pay.service_type || 'Subscription').toUpperCase()}</span></td>
+                        <td><b style="color:var(--primary);">Tsh ${parseFloat(pay.amount || 0).toLocaleString()}</b></td>
+                        <td><span style="color:var(--success); font-weight:bold;">${pay.status || 'COMPLETED'}</span></td>
+                        <td>${new Date(pay.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            });
+
+            totalPayEl.innerText = "Tsh " + grandTotal.toLocaleString();
+        }
+
+        // 3. HIFADHI VIDEO NA TANGAZO KUNYE CLOUDINARY NA SUPABASE
+        async function hifadhiVideoDB(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById("admin-video-file");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Tafadhali chagua video!");
+                return;
+            }
+
+            const btn = document.getElementById("btn-upload");
+            btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Inapakia Cloudinary & Supabase...";
+
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", UPLOAD_PRESET);
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (!data.secure_url) {
+                    throw new Error(data.error?.message || "Imeshindikana kupakia video Cloudinary!");
+                }
+
+                const record = {
+                    title: document.getElementById("admin-kichwa").value,
+                    location: document.getElementById("admin-eneo").value,
+                    price: parseFloat(document.getElementById("admin-bei").value),
+                    ad_type: document.getElementById("admin-ad-type").value,
+                    media_url: data.secure_url,
+                    is_active: true
+                };
+
+                const { error: insertErr } = await supabaseClient
+                    .from('video_ads')
+                    .insert([record]);
+
+                if (insertErr) throw insertErr;
+
+                alert("Tangazo/Video imepakiwa na kuwekwa moja kwa moja kwenye video.htm!");
+                e.target.reset();
+                document.getElementById("preview-container").style.display = "none";
+                pakiaDataAdmin();
+
+            } catch (err) {
+                alert("Hitilafu: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "<i class='fa-solid fa-cloud-arrow-up'></i> Pakia na Hifadhi";
+            }
+        }
+
+        async function futaVideo(id) {
+            if (confirm("Una uhakika unataka kufuta video/tangazo hili?")) {
+                const { error } = await supabaseClient
+                    .from('video_ads')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) {
+                    alert("Imeshindwa kufuta: " + error.message);
+                } else {
+                    alert("Tangazo limefutwa!");
+                    pakiaDataAdmin();
+                }
+            }
+        }
+
+        // 4. CHAT NA REALTIME MESSAGING CONTROL
+        async function pakiaUjumbeWaWateja() {
+            const { data: messages, error } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) return;
+
+            document.getElementById("total-messages").innerText = messages ? messages.length : 0;
+            
+            const chatListEl = document.getElementById("client-chats-list");
+            chatListEl.innerHTML = "";
+
+            if (!messages || messages.length === 0) {
+                chatListEl.innerHTML = `<p style="font-size: 0.8rem; color: #9CA3AF; text-align: center;">Hakuna ujumbe bado.</p>`;
+                return;
+            }
+
+            const watejaMap = new Map();
+            messages.forEach(m => {
+                if (m.sender_phone !== adminPhone) {
+                    const key = `${m.sender_phone}_${m.property_id}`;
+                    if (!watejaMap.has(key)) watejaMap.set(key, m);
+                }
+            });
+
+            if (watejaMap.size === 0) {
+                chatListEl.innerHTML = `<p style="font-size: 0.8rem; color: #9CA3AF; text-align: center;">Hakuna ujumbe kutoka kwa wateja.</p>`;
+                return;
+            }
+
+            watejaMap.forEach((msg) => {
+                chatListEl.innerHTML += `
+                    <div class="chat-inbox-item" onclick="funguaMazungumzo('${msg.sender_phone}', '${msg.property_id}', this)">
+                        <strong style="display:block; font-size:0.85rem;">Mteja: ${msg.sender_phone}</strong>
+                        <p style="font-size: 0.75rem; color: #9CA3AF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${msg.message_text}</p>
+                    </div>
+                `;
+            });
+        }
+
+        async function funguaMazungumzo(clientPhone, propertyId, element) {
+            selectedClientPhone = clientPhone;
+            selectedPropertyId = propertyId;
+
+            document.querySelectorAll('.chat-inbox-item').forEach(el => el.classList.remove('active'));
+            if(element) element.classList.add('active');
+
+            document.getElementById("reply-box-container").style.display = "flex";
+            await onyeshaUjumbeWaMteja(clientPhone, propertyId);
+        }
+
+        async function onyeshaUjumbeWaMteja(clientPhone, propertyId) {
+            const displayBox = document.getElementById("admin-messages-box");
+            displayBox.innerHTML = "<p style='font-size:0.8rem; color:#9CA3AF; text-align:center;'>Inapakia ujumbe...</p>";
+
+            const { data: msgs } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('property_id', propertyId)
+                .order('created_at', { ascending: true });
+
+            displayBox.innerHTML = "";
+            if (msgs && msgs.length > 0) {
+                msgs.forEach(m => {
+                    const isFromAdmin = m.sender_phone === adminPhone;
+                    displayBox.innerHTML += `
+                        <div class="msg-bubble ${isFromAdmin ? 'admin' : 'client'}">
+                            <span style="font-size:0.65rem; display:block; opacity:0.7; margin-bottom:2px;">${isFromAdmin ? 'Wewe (Admin)' : 'Mteja (' + m.sender_phone + ')'}</span>
+                            ${m.message_text}
+                        </div>
+                    `;
+                });
+                displayBox.scrollTop = displayBox.scrollHeight;
+            } else {
+                displayBox.innerHTML = "<p style='font-size:0.8rem; color:#9CA3AF; text-align:center;'>Hakuna ujumbe hapa.</p>";
+            }
+        }
+
+        async function tumaJibuAdmin() {
+            const input = document.getElementById("admin-reply-input");
+            const text = input.value.trim();
+
+            if (!text || !selectedClientPhone || !selectedPropertyId) return;
+            input.value = "";
+
+            const { error } = await supabaseClient
+                .from('messages')
+                .insert([{
+                    property_id: selectedPropertyId,
+                    sender_phone: adminPhone,
+                    receiver_phone: selectedClientPhone,
+                    sender_name: "Dalali Fasta (Admin)",
+                    message_text: text
+                }]);
+
+            if (!error) {
+                await onyeshaUjumbeWaMteja(selectedClientPhone, selectedPropertyId);
+            }
+        }
+
+        function sikilizaMesejiMpyaRealtime() {
+            supabaseClient
+                .channel('admin-realtime-chat')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    pakiaUjumbeWaWateja();
+                    if (selectedPropertyId && payload.new.property_id == selectedPropertyId) {
+                        onyeshaUjumbeWaMteja(selectedClientPhone, selectedPropertyId);
+                    }
+                })
+                .subscribe();
+        }
+    </script>
+</body>
+</html>

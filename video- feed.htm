@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dalali Fasta | Video Feed</title>
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --bg-dark: #030712;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        html, body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* TOP NAVIGATION */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+            background: linear-gradient(180deg, rgba(3,7,18,0.9) 0%, transparent 100%);
+        }
+
+        .home-icon-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            backdrop-filter: blur(12px);
+        }
+
+        /* FEED SECTION */
+        .video-container {
+            height: 100vh;
+            height: 100dvh;
+            width: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+        }
+        .video-container::-webkit-scrollbar { display: none; }
+
+        .video-card {
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            scroll-snap-align: start;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+
+        .gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(3,7,18,0.5) 0%, transparent 25%, transparent 55%, rgba(3,7,18,0.95) 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            left: 15px;
+            right: 80px;
+            z-index: 10;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+        }
+
+        .house-badge {
+            display: inline-flex;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--primary);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .house-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+        .house-location { font-size: 0.85rem; color: #CBD5E1; margin-bottom: 6px; display: flex; gap: 6px; }
+        .house-price { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+
+        .side-actions {
+            position: absolute;
+            right: 15px;
+            bottom: calc(25px + env(safe-area-inset-bottom));
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+        .action-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .action-btn:active { transform: scale(0.9); }
+        .action-btn.liked { color: var(--danger); }
+        .action-label { font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+
+        /* COMMENTS MODAL */
+        .comments-modal {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            height: 60vh;
+            background: var(--glass-bg);
+            border-top: 1px solid var(--glass-border);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            transition: bottom 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comments-modal.active { bottom: 0; }
+
+        .comments-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            font-weight: 700;
+        }
+
+        .comments-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .comment-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comment-user { font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-bottom: 2px; }
+        .comment-text { font-size: 0.85rem; color: #E2E8F0; }
+
+        .comments-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .send-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 0 16px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .video-card, .top-nav, .comments-modal { max-width: 420px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <div class="top-nav">
+        <a href="index.html" class="home-icon-btn"><i class="fa-solid fa-house"></i></a>
+    </div>
+
+    <!-- FEED SECTION -->
+    <div class="video-container" id="videoFeed">
+        <div style="display:flex; justify-content:center; align-items:center; height:100%;">
+            <i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--primary);"></i>
+        </div>
+    </div>
+
+    <!-- COMMENTS DRAWER -->
+    <div id="commentsModal" class="comments-modal">
+        <div class="comments-header">
+            <span>Maoni (<span id="modalCommentCount">0</span>)</span>
+            <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeComments()"></i>
+        </div>
+        <div class="comments-body" id="commentsContainer">
+            <!-- Maoni Yataonekana Hapa -->
+        </div>
+        <div class="comments-footer">
+            <input type="text" id="commentInput" class="form-control" placeholder="Andika maoni yako...">
+            <button class="send-btn" onclick="tumaComment()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let activeVideoIdForComments = null;
+
+        let sessionId = localStorage.getItem('user_session_id');
+        if (!sessionId) {
+            sessionId = 'user_' + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('user_session_id', sessionId);
+        }
+
+        async function anzaKusomaVideoMubashara() {
+            const { data: videos, error } = await supabaseClient
+                .from('videos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Hitilafu ya Supabase:", error.message);
+                return;
+            }
+
+            renderVideos(videos);
+
+            supabaseClient
+                .channel('public:videos')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'videos' }, () => {
+                    anzaKusomaVideoMubashara();
+                })
+                .subscribe();
+        }
+
+        async function renderVideos(videoList) {
+            const feedContainer = document.getElementById("videoFeed");
+            feedContainer.innerHTML = "";
+
+            if (!videoList || videoList.length === 0) {
+                feedContainer.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:30px;">
+                        <i class="fa-solid fa-video-slash fa-3x" style="color: var(--primary); margin-bottom:15px;"></i>
+                        <h2>Hakuna Video Zilizohifadhiwa</h2>
+                    </div>
+                `;
+                return;
+            }
+
+            const { data: myLikes } = await supabaseClient
+                .from('likes')
+                .select('video_id')
+                .eq('user_session_id', sessionId);
+
+            const likedVideoIds = new Set(myLikes ? myLikes.map(l => l.video_id) : []);
+
+            videoList.forEach((item) => {
+                const beiFormated = isNaN(item.bei) ? item.bei : `Tsh ${parseFloat(item.bei || 0).toLocaleString()}`;
+                const isLiked = likedVideoIds.has(item.id);
+
+                const card = `
+                    <div class="video-card" id="video-card-${item.id}">
+                        <div class="gradient-overlay"></div>
+                        <video src="${item.video_url}" loop playsinline muted preload="metadata" onclick="togglePlay(this)"></video>
+                        
+                        <div class="video-overlay">
+                            <div class="house-badge"><i class="fa-solid fa-fire"></i> Inapatikana</div>
+                            <div class="house-title">${item.kichwa}</div>
+                            <div class="house-location"><i class="fa-solid fa-location-dot"></i> ${item.eneo}</div>
+                            <div class="house-price">${beiFormated}</div>
+                        </div>
+
+                        <div class="side-actions">
+                            <!-- LIKE -->
+                            <div class="action-item">
+                                <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${item.id}', this)">
+                                    <i class="fa-solid fa-heart"></i>
+                                </button>
+                                <span class="action-label like-count">${item.likes_count || 0}</span>
+                            </div>
+
+                            <!-- COMMENT -->
+                            <div class="action-item">
+                                <button class="action-btn" onclick="openComments('${item.id}')">
+                                    <i class="fa-solid fa-comment-dots"></i>
+                                </button>
+                                <span class="action-label comment-count-${item.id}">${item.comments_count || 0}</span>
+                            </div>
+
+                            <!-- SAUTI -->
+                            <div class="action-item">
+                                <button class="action-btn" onclick="toggleMute(this)"><i class="fa-solid fa-volume-xmark"></i></button>
+                                <span class="action-label">Sauti</span>
+                            </div>
+
+                            <!-- WHATSAPP -->
+                            <div class="action-item">
+                                <button class="action-btn" style="background:#25D366; border:none;" onclick="funguaWhatsApp('${item.kichwa}')"><i class="fa-brands fa-whatsapp"></i></button>
+                                <span class="action-label">WhatsApp</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                feedContainer.innerHTML += card;
+            });
+
+            setupAutoPlay();
+        }
+
+        async function toggleLike(videoId, btn) {
+            const isLiked = btn.classList.contains('liked');
+            const countLabel = btn.nextElementSibling;
+            let currentCount = parseInt(countLabel.innerText) || 0;
+
+            if (isLiked) {
+                btn.classList.remove('liked');
+                countLabel.innerText = Math.max(0, currentCount - 1);
+                
+                await supabaseClient.from('likes').delete().match({ video_id: videoId, user_session_id: sessionId });
+                await supabaseClient.rpc('decrement_likes', { row_id: videoId }).catch(() => {
+                    supabaseClient.from('videos').update({ likes_count: Math.max(0, currentCount - 1) }).eq('id', videoId);
+                });
+            } else {
+                btn.classList.add('liked');
+                countLabel.innerText = currentCount + 1;
+
+                await supabaseClient.from('likes').insert([{ video_id: videoId, user_session_id: sessionId }]);
+                await supabaseClient.rpc('increment_likes', { row_id: videoId }).catch(() => {
+                    supabaseClient.from('videos').update({ likes_count: currentCount + 1 }).eq('id', videoId);
+                });
+            }
+        }
+
+        async function openComments(videoId) {
+            activeVideoIdForComments = videoId;
+            document.getElementById('commentsModal').classList.add('active');
+            kusomaComments(videoId);
+        }
+
+        function closeComments() {
+            document.getElementById('commentsModal').classList.remove('active');
+            activeVideoIdForComments = null;
+        }
+
+        async function kusomaComments(videoId) {
+            const container = document.getElementById('commentsContainer');
+            container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Inasoma maoni...</div>`;
+
+            const { data: comments } = await supabaseClient
+                .from('comments')
+                .select('*')
+                .eq('video_id', videoId)
+                .order('created_at', { ascending: true });
+
+            container.innerHTML = "";
+            document.getElementById('modalCommentCount').innerText = comments ? comments.length : 0;
+
+            if (!comments || comments.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#94A3B8; font-size:0.85rem; margin-top:20px;">Kuwa wa kwanza kutoa maoni!</p>`;
+                return;
+            }
+
+            comments.forEach(c => {
+                container.innerHTML += `
+                    <div class="comment-item">
+                        <div class="comment-user">${c.user_name || 'Mteja'}</div>
+                        <div class="comment-text">${c.comment_text}</div>
+                    </div>
+                `;
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function tumaComment() {
+            const input = document.getElementById('commentInput');
+            const text = input.value.trim();
+            if (!text || !activeVideoIdForComments) return;
+
+            input.value = "";
+
+            const { error } = await supabaseClient
+                .from('comments')
+                .insert([{ video_id: activeVideoIdForComments, comment_text: text }]);
+
+            if (!error) {
+                kusomaComments(activeVideoIdForComments);
+                const label = document.querySelector(`.comment-count-${activeVideoIdForComments}`);
+                if (label) {
+                    label.innerText = (parseInt(label.innerText) || 0) + 1;
+                }
+            }
+        }
+
+        function togglePlay(video) { video.paused ? video.play() : video.pause(); }
+
+        function toggleMute(btn) {
+            const card = btn.closest('.video-card');
+            const video = card.querySelector('video');
+            const icon = btn.querySelector('i');
+            video.muted = !video.muted;
+            icon.className = video.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        }
+
+        function setupAutoPlay() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector("video");
+                    if (video) {
+                        if (entry.isIntersecting) {
+                            video.play().catch(() => {});
+                        } else {
+                            video.pause();
+                            video.currentTime = 0;
+                        }
+                    }
+                });
+            }, { threshold: 0.6 });
+
+            document.querySelectorAll(".video-card").forEach(card => observer.observe(card));
+        }
+
+        function funguaWhatsApp(kichwa) {
+            const namba = "255700000000";
+            const msg = encodeURIComponent(`Habari Dalali, nahitaji maelezo zaidi kuhusu hii nyumba: ${kichwa}`);
+            window.open(`https://wa.me/${namba}?text=${msg}`, '_blank');
+        }
+
+        window.onload = function() {
+            anzaKusomaVideoMubashara();
+        };
+    </script>
+</body>
+</html>

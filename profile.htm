@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profaili - Dalali Fasta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #0b0f19; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        .phone-container { width: 100%; max-width: 410px; height: 820px; background: #111827; border-radius: 35px; position: relative; overflow-y: auto; border: 3px solid #1f2937; padding: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .top-nav { width: 100%; display: flex; justify-content: flex-start; margin-bottom: 10px; }
+        .back-link { color: #9ca3af; text-decoration: none; font-size: 13px; }
+        .back-link:hover { color: #fff; }
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: bold; margin-top: 10px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(236,72,153,0.4); }
+        h3 { font-size: 18px; margin-bottom: 5px; color: #fff; }
+        p.username { color: #9ca3af; font-size: 13px; margin-bottom: 20px; }
+        .form-group { width: 100%; margin-bottom: 15px; text-align: left; }
+        .form-group label { font-size: 12px; color: #9ca3af; display: block; margin-bottom: 5px; }
+        .form-control { width: 100%; background: #1f2937; border: 1px solid rgba(255,255,255,0.1); padding: 11px 14px; border-radius: 12px; color: white; font-size: 13px; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #8b5cf6; }
+        .btn-save { width: 100%; background: linear-gradient(135deg, #ec4899, #8b5cf6); border: none; padding: 12px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 14px; box-shadow: 0 4px 15px rgba(139,92,246,0.4); }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="top-nav">
+            <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Rudi Nyumbani</a>
+        </div>
+        <div class="profile-avatar" id="avatarLetter">J</div>
+        <h3 id="fullNameText">Jake Live</h3>
+        <p class="username" id="usernameText">@jake_live</p>
+
+        <div class="form-group">
+            <label>Jina Kamili</label>
+            <input type="text" id="fullNameInput" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Bio (Maelezo mafupi)</label>
+            <textarea id="bioInput" class="form-control" rows="3"></textarea>
+        </div>
+        <button class="btn-save" id="saveBtn">Hifadhi Mabadiliko</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const userId = 1;
+
+        async function loadProfile() {
+            const { data, error } = await _supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                document.getElementById('fullNameText').innerText = data.full_name;
+                document.getElementById('usernameText').innerText = '@' + data.username;
+                document.getElementById('fullNameInput').value = data.full_name || '';
+                document.getElementById('bioInput').value = data.bio || '';
+                document.getElementById('avatarLetter').innerText = data.full_name ? data.full_name.charAt(0).toUpperCase() : 'J';
+            }
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const fullName = document.getElementById('fullNameInput').value.trim();
+            const bio = document.getElementById('bioInput').value.trim();
+
+            const { error } = await _supabase
+                .from('users')
+                .update({ full_name: fullName, bio: bio })
+                .eq('id', userId);
+
+            if (error) {
+                alert("Imeshindwa kuhifadhi: " + error.message);
+            } else {
+                alert("Profaili imesasishwa kikamilifu! ✅");
+                loadProfile();
+            }
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>

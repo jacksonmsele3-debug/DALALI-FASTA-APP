@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Fasta | TikTok Video Feed & Live</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #000; color: #fff; overflow: hidden; }
+
+        .top-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent); padding: 15px; }
+        .live-bar { display: flex; gap: 14px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+        .live-bar::-webkit-scrollbar { display: none; }
+        .live-avatar-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; flex-shrink: 0; }
+        
+        .avatar-ring { width: 58px; height: 58px; border-radius: 50%; padding: 2.5px; background: linear-gradient(45deg, #ef4444, #f97316); animation: pulse 1.8s infinite; position: relative; }
+        .avatar-ring img, .avatar-ring .avatar-placeholder { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #000; background: #10B981; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+        .live-badge { position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; font-size: 0.55rem; font-weight: 800; padding: 1px 5px; border-radius: 6px; border: 1px solid #000; }
+
+        /* Video Feed */
+        .video-feed { height: 100vh; width: 100vw; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .video-card { height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; display: flex; justify-content: center; align-items: center; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Modal kwa ajili ya Kuingia Live Stream */
+        .live-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 999; display: none; flex-direction: column; }
+        .live-modal.active { display: flex; }
+        .btn-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.25); border: none; color: white; width: 38px; height: 38px; border-radius: 50%; z-index: 1000; font-size: 1.2rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 800; font-size: 0.95rem; letter-spacing: 0.5px;">DALALI FASTA</span>
+            <a href="dalali-register.html" style="color: #10B981; font-size: 0.8rem; font-weight: 700; text-decoration: none;"><i class="fa-solid fa-user-plus"></i> Sajili kama Dalali</a>
+        </div>
+
+        <!-- Sehemu ya Madalali Waliopo Live -->
+        <div class="live-bar" id="liveMadalaliContainer"></div>
+    </div>
+
+    <!-- Feed ya Video Zilizorekodiwa (TikTok Container) -->
+    <div class="video-feed">
+        <div class="video-card">
+            <video loop muted autoplay playsinline src="https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-architecture-41558-large.mp4"></video>
+        </div>
+    </div>
+
+    <!-- Live Stream Modal -->
+    <div class="live-modal" id="liveModal">
+        <button class="btn-close" onclick="fungaLiveModal()"><i class="fa-solid fa-xmark"></i></button>
+        <video id="clientLiveVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <div style="position: absolute; bottom: 35px; left: 20px; background: rgba(0,0,0,0.65); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(5px);">
+            <p style="color: #ef4444; font-weight: 800; font-size: 0.75rem;"><i class="fa-solid fa-circle"></i> LIVE CHANNEL</p>
+            <h3 id="liveDalaliTitle" style="margin-top: 2px;">Dalali Live Stream</h3>
+        </div>
+    </div>
+
+    <script>
+        let clientPeer = null;
+        let currentCall = null;
+
+        function funguaDatabase() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open("DalaliFastaDB", 1);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await pakiaMadalaliWaliopoLive();
+        });
+
+        async function pakiaMadalaliWaliopoLive() {
+            const container = document.getElementById("liveMadalaliContainer");
+            container.innerHTML = "";
+
+            try {
+                const db = await funguaDatabase();
+                const tx = db.transaction("madalali", "readonly");
+                const store = tx.objectStore("madalali");
+                const req = store.getAll();
+
+                req.onsuccess = () => {
+                    const madalali = req.result || [];
+                    if (madalali.length === 0) {
+                        container.innerHTML = `<span style="font-size:0.75rem; color:#94a3b8;">Hakuna Dalali aliye Live hivi sasa</span>`;
+                        return;
+                    }
+
+                    madalali.forEach(dalali => {
+                        const item = document.createElement("div");
+                        item.className = "live-avatar-item";
+                        item.onclick = () => jiungeNaLive(dalali);
+
+                        item.innerHTML = `
+                            <div class="avatar-ring">
+                                <div class="avatar-placeholder">${dalali.jina.charAt(0)}</div>
+                                <span class="live-badge">LIVE</span>
+                            </div>
+                            <span style="font-size:0.7rem; margin-top:4px; max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${dalali.jina}</span>
+                        `;
+                        container.appendChild(item);
+                    });
+                };
+            } catch (e) {
+                container.innerHTML = `<span style="font-size:0.75rem; color:#94a3b8;">Sajili dalali kwanza ili kuanza Live.</span>`;
+            }
+        }
+
+        function jiungeNaLive(dalali) {
+            document.getElementById("liveModal").classList.add("active");
+            document.getElementById("liveDalaliTitle").innerText = "Upo kwenye Live ya " + dalali.jina;
+
+            clientPeer = new Peer();
+
+            clientPeer.on('open', () => {
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                    .then(mediaStream => {
+                        currentCall = clientPeer.call(dalali.peerId, mediaStream);
+
+                        currentCall.on('stream', remoteStream => {
+                            const clientVideo = document.getElementById("clientLiveVideo");
+                            clientVideo.srcObject = remoteStream;
+                        });
+                    })
+                    .catch(() => {
+                        alert("Haikuweza kuunganisha kwenye kamera ya Dalali!");
+                    });
+            });
+        }
+
+        function fungaLiveModal() {
+            document.getElementById("liveModal").classList.remove("active");
+            if (currentCall) currentCall.close();
+            if (clientPeer) clientPeer.destroy();
+        }
+    </script>
+</body>
+</html>

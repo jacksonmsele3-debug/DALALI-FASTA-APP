@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Fasta | Arifa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #030712; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        .notification-wrapper { position: relative; display: inline-block; }
+
+        .notification-bell-btn {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .notification-bell-btn:hover { background: rgba(16, 185, 129, 0.2); border-color: #10B981; color: #10B981; }
+
+        .notification-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: #EF4444; color: white; font-size: 10px; font-weight: bold;
+            padding: 2px 6px; border-radius: 10px; border: 2px solid #030712; display: none;
+        }
+
+        .notification-dropdown {
+            position: absolute; right: 0; top: 55px; width: 310px;
+            background: #111827; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            overflow: hidden; display: none; z-index: 100;
+        }
+
+        .notification-header {
+            padding: 12px 15px; background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .notification-header h4 { font-size: 13px; font-weight: 700; color: #E5E7EB; }
+        .clear-all-btn { background: none; border: none; color: #10B981; font-size: 11px; cursor: pointer; font-weight: 600; }
+        .clear-all-btn:hover { text-decoration: underline; }
+
+        .notification-list { max-height: 260px; overflow-y: auto; }
+
+        .notification-item {
+            padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex; gap: 10px; align-items: flex-start; cursor: pointer; transition: background 0.15s;
+        }
+        .notification-item:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .notification-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15); color: #10B981;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+        }
+        .notification-content p { font-size: 12px; color: #D1D5DB; line-height: 1.4; margin-bottom: 3px; }
+        .notification-time { font-size: 10px; color: #9CA3AF; }
+        .no-notifications { padding: 25px; text-align: center; color: #9CA3AF; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="notification-wrapper">
+        <button class="notification-bell-btn" id="bellBtn" onclick="toggleNotifications()">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-badge" id="notificationBadge">0</span>
+        </button>
+
+        <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">
+                <h4>Arifa Mpya (Database)</h4>
+                <button class="clear-all-btn" onclick="safishaArifa()">Soma zote</button>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <div class="no-notifications">Inapakia arifa...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const bellBtn = document.getElementById('bellBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const notificationList = document.getElementById('notificationList');
+
+        let arifaZangu = [];
+
+        // Onyesha / Ficha Menyu ya Arifa
+        function toggleNotifications() {
+            if (notificationDropdown.style.display === 'block') {
+                notificationDropdown.style.display = 'none';
+            } else {
+                notificationDropdown.style.display = 'block';
+                pakArifaKutokaSupabase();
+            }
+        }
+
+        // Funga ikibonyeza nje
+        window.addEventListener('click', function(e) {
+            if (!document.querySelector('.notification-wrapper').contains(e.target)) {
+                notificationDropdown.style.display = 'none';
+            }
+        });
+
+        // 1. VUTA ARIFA ZA KWELI KUTOKA SUPABASE
+        async function pakArifaKutokaSupabase() {
+            const { data, error } = await _supabase
+                .from('notifications')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                arifaZangu = data;
+                sasishaArifaUI();
+            }
+        }
+
+        // 2. SASISHA MUONEKANO (UI) NA BADGE
+        function sasishaArifaUI() {
+            notificationList.innerHTML = '';
+            
+            let hazijasomwa = arifaZangu.filter(a => !a.soma);
+            
+            if (hazijasomwa.length > 0) {
+                notificationBadge.innerText = hazijasomwa.length;
+                notificationBadge.style.display = 'inline-block';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+
+            if (arifaZangu.length === 0) {
+                notificationList.innerHTML = `<div class="no-notifications">Hakuna arifa mpya kwa sasa.</div>`;
+                return;
+            }
+
+            arifaZangu.forEach(arifa => {
+                notificationList.innerHTML += `
+                    <div class="notification-item" style="${arifa.soma ? 'opacity: 0.5;' : ''}" onclick="ashiriaImesomwa('${arifa.id}')">
+                        <div class="notification-icon">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p>${arifa.ujumbe}</p>
+                            <span class="notification-time">${arifa.muda || 'Hivi punde'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. WEKA ALAMA KWAMBA IMESTUSIWA/IMESOMWA KUTOKA DATABASE
+        async function ashiriaImesomwa(id) {
+            await _supabase
+                .from('notifications')
+                .update({ soma: true })
+                .eq('id', id);
+
+            let arifa = arifaZangu.find(a => a.id == id);
+            if (arifa) arifa.soma = true;
+            sasishaArifaUI();
+        }
+
+        // 4. SAKAFISHA ZOTE ZIWE ZIMESOMWA
+        async function safishaArifa() {
+            await _supabase
+                .from('notifications')
+                .update({ soma: true })
+                .eq('soma', false);
+
+            arifaZangu.forEach(a => a.soma = true);
+            sasishaArifaUI();
+        }
+
+        // 5. REALTIME LISTENER: PATA ARIFA MPYA PAPO HAPO ZIKINGIA
+        _supabase
+            .channel('public:notifications')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+                arifaZangu.unshift(payload.new);
+                sasishaArifaUI();
+            })
+            .subscribe();
+
+        // Pakia data mara ya kwanza ukurasa unapofunguka
+        window.onload = () => {
+            pakArifaKutokaSupabase();
+        };
+    </script>
+</body>
+</html>

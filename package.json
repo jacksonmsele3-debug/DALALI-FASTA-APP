@@ -1,0 +1,21 @@
+{
+  "name": "dalalifasta",
+  "version": "1.0.0",
+  "description": "Soko Kuu la Nyumba na Viwanja Tanzania",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "pwa",
+    "real-estate",
+    "dalali",
+    "tanzania",
+    "dalalifasta"
+  ],
+  "author": "Dalali Fasta Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Fasta | Soko Kuu la Nyumba Tanzania</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-hover: #059669;
+            --dark-bg: #090D16;
+            --panel-bg: #0f172a;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding-bottom: 50px;
+        }
+
+        /* 3D MOTION SPLASH SCREEN */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #090D16 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            perspective: 1000px;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .logo-box {
+            width: 110px; height: 110px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            border-radius: 25px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.3);
+            animation: zoomIn3D 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-style: preserve-3d; margin-bottom: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-box i { font-size: 45px; color: #ffffff; animation: floatIcon 3s ease-in-out infinite alternate; }
+
+        @keyframes zoomIn3D {
+            0% { transform: scale(0.2) rotateX(-60deg) rotateY(45deg); opacity: 0; }
+            50% { transform: scale(1.1) rotateX(15deg) rotateY(-15deg); opacity: 1; }
+            100% { transform: scale(1) rotateX(0deg) rotateY(0deg); opacity: 1; }
+        }
+
+        @keyframes floatIcon {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-6px) rotate(4deg); }
+        }
+
+        .splash-title { font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
+        .splash-title span { color: var(--primary); }
+        .splash-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
+
+        #mainHomeContent {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* NAVIGATION BAR & HAMBURGER MENU */
+        header {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            background: rgba(9, 13, 22, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 12px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .menu-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .menu-toggle:hover { background: rgba(16, 185, 129, 0.15); color: var(--primary); }
+
+        /* SIDE MENU (DRAWER) */
+        .side-menu {
+            position: fixed;
+            top: 0; right: -280px;
+            width: 280px; height: 100%;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            z-index: 2000;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            transition: right 0.4s ease;
+        }
+
+        .side-menu.active { right: 0; }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .menu-close {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.2rem; cursor: pointer;
+        }
+        .menu-close:hover { color: white; }
+
+        .nav-pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            border-radius: 10px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-pill-btn:hover {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-register {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        .btn-register:hover { background: var(--primary-hover); color: white; }
+
+        /* HERO SECTION */
+        .hero {
+            padding: 100px 15px 15px;
+            text-align: center;
+            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.1) 0%, rgba(9, 13, 22, 0) 70%);
+        }
+
+        .hero h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(to right, #10B981, #34D399);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto 15px;
+        }
+
+        /* ADMIN PROMO BANNER BOX */
+        .promo-banner-box {
+            width: 100%;
+            max-width: 900px;
+            height: 180px;
+            margin: 0 auto 20px;
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .promo-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, rgba(9, 13, 22, 0.91) 35%, rgba(9, 13, 22, 0.2) 100%);
+            z-index: 1;
+        }
+
+        .promo-content {
+            position: relative;
+            z-index: 2;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .promo-content h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .promo-content p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .btn-promo-action {
+            display: inline-block;
+            background: #FBBF24;
+            color: #090D16;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-decoration: none;
+            width: fit-content;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(251, 191, 36, 0.3);
+        }
+        .btn-promo-action:hover { transform: scale(1.03); background: #f59e0b; }
+
+        /* FILTERS BAR */
+        .filter-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 120px;
+            gap: 12px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 25px;
+            align-items: flex-end;
+            text-align: left;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .filter-group input, .filter-group select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 9px 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .btn-filter-search {
+            background: var(--primary);
+            color: white;
+            border: none;
+            height: 38px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+        .btn-filter-search:hover { background: var(--primary-hover); }
+
+        /* MARKETPLACE GRID */
+        section { padding: 10px 0; }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .house-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .house-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .house-image {
+            height: 190px;
+            position: relative;
+            background: #1e293b;
+        }
+
+        .house-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .badge-rent { background: var(--primary); color: white; }
+        .badge-sale { background: #3b82f6; color: white; }
+
+        .house-details {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .house-price {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .house-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .house-location {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-chat-wa {
+            background: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 9px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.3s;
+        }
+        .btn-chat-wa:hover { opacity: 0.9; }
+
+        .card-msg-form {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 2px;
+        }
+
+        .card-msg-form h4 {
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-msg-form input, 
+        .card-msg-form textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            outline: none;
+            margin-bottom: 6px;
+        }
+
+        .card-msg-form button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .card-msg-form button:hover { background: var(--primary-hover); }
+
+        @media (max-width: 850px) {
+            .hero { padding-top: 90px; }
+            .hero h1 { font-size: 1.4rem; }
+            .promo-banner-box { height: 160px; padding: 15px; }
+            .promo-content h2 { font-size: 1.1rem; }
+            .filter-container { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
+            .listings-grid { grid-template-columns: 1fr; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splashScreen">
+        <div class="logo-box">
+            <i class="fa-solid fa-house-chimney-user"></i>
+        </div>
+        <div class="splash-title">DALALI<span>FASTA</span></div>
+        <div class="splash-subtitle">Nyumba na Viwanja Mkononi Mwako</div>
+    </div>
+
+    <div id="mainHomeContent">
+        <header>
+            <a href="#" class="logo">
+                <i class="fa-solid fa-building" style="color: #10B981;"></i> DALALI<span>FASTA</span>
+            </a>
+            <button class="menu-toggle" onclick="funguaMenyu()"><i class="fa-solid fa-bars"></i></button>
+        </header>
+
+        <div class="side-menu" id="sideMenu">
+            <div class="menu-header">
+                <span style="font-weight:800; font-size:1rem; color:var(--primary);">Menyu Kuu</span>
+                <button class="menu-close" onclick="fungaMenyu()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="nav-buttons" id="auth-nav" style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="video.htm" class="nav-pill-btn"><i class="fa-solid fa-video" style="color: #10B981;"></i><span>Live Video</span></a>
+                <a href="login.htm" class="nav-pill-btn"><i class="fa-solid fa-right-to-bracket"></i><span>Ingia</span></a>
+                <a href="register.htm" class="nav-pill-btn btn-register"><i class="fa-solid fa-user-plus"></i><span>Sajili</span></a>
+                <a href="ai_assistant.htm" class="nav-pill-btn btn-register"><i class="fa-solid fa-robot"></i><span>AI Assistant</span></a>
+            </div>
+        </div>
+
+        <section class="hero">
+            <div style="width: 100%;">
+                <h1>Soko la Nyumba Halisi na <span>Zilizothibitishwa</span></h1>
+                <p>Tafuta nyumba kisha tuma ujumbe moja kwa moja kwa dalali kupitia kadi yake!</p>
+            </div>
+        </section>
+
+        <div id="adminPromoContainer">
+            <div class="promo-banner-box" style="background-image: url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80');">
+                <div class="promo-overlay"></div>
+                <div class="promo-content">
+                    <h2>PUNGUZO LA 50% KWENYE NYUMBA ZOTE</h2>
+                    <p>Pata nyumba ya ndoto yako leo kwa bei nafuu kabisa kupitia Dalali Fasta.</p>
+                    <a href="#" class="btn-promo-action">CHAGUA SASA</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="filter-group">
+                <label>Eneo Gani?</label>
+                <input type="text" id="search-location" placeholder="Mf. Sinza, Mikocheni...">
+            </div>
+            <div class="filter-group">
+                <label>Biashara</label>
+                <select id="search-status">
+                    <option value="zote">Zote</option>
+                    <option value="Inapangishwa">Inapangishwa</option>
+                    <option value="Inauzwa">Inauzwa</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Bajeti (Max)</label>
+                <input type="number" id="search-price" placeholder="Mf. 500000">
+            </div>
+            <button class="btn-filter-search" onclick="chujaNyumba()">Tafuta</button>
+        </div>
+
+        <section>
+            <div class="listings-grid" id="market-listings">
+                <div style="text-align: center; grid-column: 1/-1; padding: 30px; color: var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 8px; font-size: 0.85rem;">Tunapakia nyumba...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                const mainContent = document.getElementById('mainHomeContent');
+
+                splash.style.opacity = '0';
+                splash.style.transform = 'scale(1.1)';
+
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    mainContent.style.opacity = '1';
+                    pakiaNyumba();
+                    pakiaTangazoLaAdmin();
+                    lindaKikao();
+                }, 600);
+            }, 2500); 
+        });
+
+        function funguaMenyu() {
+            document.getElementById('sideMenu').classList.add('active');
+        }
+        function fungaMenyu() {
+            document.getElementById('sideMenu').classList.remove('active');
+        }
+
+        const SUPABASE_URL = "https://xtczpelcjahljxhkjeoj.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_Yf1ONcdgIFAamD9w7arlkg_tM0URb5e"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let nyumbaZote = [];
+
+        async function pakiaTangazoLaAdmin() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('admin_banners')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (data && data.length > 0) {
+                    const banner = data[0];
+                    const container = document.getElementById('adminPromoContainer');
+                    container.innerHTML = `
+                        <div class="promo-banner-box" style="background-image: url('${banner.image_url || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80'}');">
+                            <div class="promo-overlay"></div>
+                            <div class="promo-content">
+                                <h2>${banner.title || 'TANGAZO KUBWA'}</h2>
+                                <p>${banner.description || 'Pata huduma bora kupitia Dalali Fasta leo.'}</p>
+                                <a href="${banner.button_link || '#'}" class="btn-promo-action">${banner.button_text || 'ANGALIA'}</a>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.log("Kosa la kupakia tangazo la admin:", err.message);
+            }
+        }
+
+        async function pakiaNyumba() {
+            const { data: properties, error } = await supabaseClient
+                .from('properties')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                document.getElementById("market-listings").innerHTML = "<p style='text-align: center; color: var(--text-muted); font-size: 0.85rem;'>Imeshindwa kupakia data.</p>";
+                return;
+            }
+
+            nyumbaZote = properties || [];
+            onyeshaNyumba(nyumbaZote);
+        }
+
+        function onyeshaNyumba(orodha) {
+            const grid = document.getElementById("market-listings");
+            grid.innerHTML = "";
+
+            if (orodha.length === 0) {
+                grid.innerHTML = "<p style='text-align: center; color: var(--text-muted); font-size: 0.85rem;'>Hakuna nyumba sokoni.</p>";
+                return;
+            }
+
+            orodha.forEach(nyumba => {
+                const img = nyumba.image_url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80';
+                const bei = isNaN(nyumba.price) ? nyumba.price : `Tsh ${Number(nyumba.price).toLocaleString()}/=`;
+
+                grid.innerHTML += `
+                    <div class="house-card">
+                        <div class="house-image">
+                            <span class="badge-status ${nyumba.category === 'Inauzwa' ? 'badge-sale' : 'badge-rent'}">${nyumba.category || 'Inapangishwa'}</span>
+                            <img src="${img}" alt="Nyumba">
+                        </div>
+                        <div class="house-details">
+                            <div>
+                                <div class="house-price">${bei}</div>
+                                <h3 class="house-title">${nyumba.title || 'Nyumba Halisi'}</h3>
+                                <div class="house-location"><i class="fa-solid fa-location-dot"></i> ${nyumba.location || 'Tanzania'}</div>
+                            </div>
+
+                            <a class="btn-chat-wa" href="https://wa.me/${nyumba.phone}?text=Habari%20${encodeURIComponent(nyumba.agent_name || 'Dalali')},%20nimeona%20nyumba%20yako%20Dalali%20Fasta" target="_blank">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp na Dalali
+                            </a>
+
+                            <div class="card-msg-form">
+                                <h4><i class="fa-solid fa-paper-plane"></i> Tuma Ujumbe kwa Dalali</h4>
+                                <form onsubmit="tumaUjumbeKwaNyumba(event, '${nyumba.id}', '${nyumba.dalali_id || ''}')">
+                                    <input type="text" id="name-${nyumba.id}" placeholder="Jina Lako" required>
+                                    <input type="text" id="phone-${nyumba.id}" placeholder="Namba ya Simu" required>
+                                    <textarea id="msg-${nyumba.id}" rows="2" placeholder="Andika ujumbe wako..." required></textarea>
+                                    <button type="submit" id="btn-send-${nyumba.id}">
+                                        <i class="fa-solid fa-envelope"></i> Tuma Ujumbe
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function tumaUjumbeKwaNyumba(event, propertyId, dalaliId) {
+            event.preventDefault();
+
+            const btn = document.getElementById(`btn-send-${propertyId}`);
+            const nameInput = document.getElementById(`name-${propertyId}`);
+            const phoneInput = document.getElementById(`phone-${propertyId}`);
+            const msgInput = document.getElementById(`msg-${propertyId}`);
+
+            btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Inatuma...";
+
+            try {
+                const { error } = await supabaseClient
+                    .from('messages')
+                    .insert([
+                        {
+                            property_id: propertyId,
+                            dalali_id: dalaliId || 'HAJULIKANI',
+                            client_name: nameInput.value.trim(),
+                            client_phone: phoneInput.value.trim(),
+                            message: msgInput.value.trim()
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                alert("Ujumbe wako umetumwa kikamilifu kwa Dalali!");
+                nameInput.value = "";
+                phoneInput.value = "";
+                msgInput.value = "";
+
+            } catch (err) {
+                alert("Haikuweza kutuma ujumbe: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = "<i class='fa-solid fa-envelope'></i> Tuma Ujumbe";
+            }
+        }
+
+        function chujaNyumba() {
+            const eneo = document.getElementById("search-location").value.toLowerCase().trim();
+            const status = document.getElementById("search-status").value;
+            const bei = parseFloat(document.getElementById("search-price").value) || 0;
+
+            const res = nyumbaZote.filter(n => {
+                const matchEneo = (n.location || '').toLowerCase().includes(eneo);
+                const matchStatus = status === "zote" || (n.category || '') === status;
+                const matchBei = bei === 0 || (parseFloat(n.price) <= bei);
+                return matchEneo && matchStatus && matchBei;
+            });
+            onyeshaNyumba(res);
+        }
+
+        function lindaKikao() {
+            const user = JSON.parse(localStorage.getItem("mtumiaji_wa_sasa"));
+            if (user) {
+                document.getElementById("auth-nav").innerHTML = `
+                    <a href="video.html" class="nav-pill-btn"><i class="fa-solid fa-video" style="color: #10B981;"></i><span>Live Video</span></a>
+                    <div style="color:var(--primary); font-weight:bold; font-size:0.9rem; padding: 10px; background:rgba(16,185,129,0.1); border-radius:10px; text-align:center;">${user.jina || 'Akaunti Yako'}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceFlow AI — Visual IVR & Agent Builder</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="bot"></i> <span>VoiceFlow AI</span>
+            </div>
+            <nav class="menu">
+                <a href="#" class="nav-item active"><i data-lucide="git-merge"></i> IVR Builder</a>
+                <a href="#" class="nav-item"><i data-lucide="mic"></i> AI Agents</a>
+                <a href="#" class="nav-item"><i data-lucide="phone-call"></i> Call Logs</a>
+                <a href="#" class="nav-item"><i data-lucide="database"></i> Knowledge Base</a>
+            </nav>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="topbar">
+                <h2>IVR Canvas Builder</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="open-ai-modal"><i data-lucide="sparkles"></i> AI Generator</button>
+                    <button class="btn btn-secondary" id="open-sim-modal"><i data-lucide="play"></i> Test Flow</button>
+                    <button class="btn btn-primary" id="publish-btn"><i data-lucide="cloud-upload"></i> Publish Flow</button>
+                </div>
+            </header>
+
+            <div class="canvas-wrapper">
+                <!-- Sidebar Node Palette -->
+                <div class="node-palette">
+                    <h4>IVR Blocks</h4>
+                    <div class="palette-node" draggable="true" data-type="START"><i data-lucide="play-circle"></i> Start Call</div>
+                    <div class="palette-node" draggable="true" data-type="GREETING"><i data-lucide="volume-2"></i> Greeting</div>
+                    <div class="palette-node" draggable="true" data-type="MENU"><i data-lucide="list"></i> Menu Options</div>
+                    <div class="palette-node" draggable="true" data-type="AI_AGENT"><i data-lucide="bot"></i> AI Voice Agent</div>
+                    <div class="palette-node" draggable="true" data-type="TRANSFER"><i data-lucide="phone-forwarded"></i> Transfer Call</div>
+                    <div class="palette-node" draggable="true" data-type="END"><i data-lucide="phone-off"></i> End Call</div>
+                </div>
+                
+                <!-- Main Drag & Drop Canvas -->
+                <div id="flow-canvas" class="canvas">
+                    <svg id="svg-connections-layer"></svg>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI Generator Modal -->
+    <div id="ai-modal" class="modal-backdrop">
+        <div class="modal">
+            <h3><i data-lucide="sparkles"></i> Build IVR with Gemini AI</h3>
+            <p>Eleza muundo wa IVR unaotaka kwa Kiswahili au English:</p>
+            <textarea id="ai-prompt-input" rows="4" placeholder="Mfano: Nataka IVR ya hospitali. Mteja achague Kiswahili au English, kisha achague Appointment, Support, au Doctor Call..."></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="close-ai-modal">Cancel</button>
+                <button class="btn btn-primary" id="generate-flow-btn">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulator Modal -->
+    <div id="sim-modal" class="modal-backdrop">
+        <div class="modal sim-card">
+            <h3><i data-lucide="phone-call"></i> IVR Simulator</h3>
+            <div id="sim-display" class="sim-screen">
+                <p class="sys-msg">Press Start Call to begin testing...</p>
+            </div>
+            <div class="sim-controls">
+                <input type="text" id="sim-user-input" placeholder="Andika au bonyeza namba (1, 2)...">
+                <button class="btn btn-primary" id="sim-send-btn">Send</button>
+            </div>
+            <button class="btn btn-danger btn-block" id="close-sim-modal" style="margin-top:10px;">Hang Up</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Dalali Fasta",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Dalali",
+  "start_url": "/",
+  "theme_color": "#043c08",
+  "id": "com.dalali.fasta",
+  "description": "Programu bora ya kutafuta na kuchapisha nyumba, viwanja na vyumba Tanzania.",
+  "icons": [
+    {
+      "src": "https://storied-fudge-0c8ed5.netlify.app/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://storied-fudge-0c8ed5.netlify.app/launchericon-192x192.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "lifestyle",
+    "productivity"
+  ]
+}
